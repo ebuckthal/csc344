@@ -1,0 +1,43 @@
+PITCH
+
+- it's geometric
+- some intervals sound good
+   octave         2 - 1 
+   fifth          3 - 2 
+   fourth         4 - 3 
+   major third    5 - 4
+   minor third    6 - 5
+
+transpotition -- moving an existing melody up or down in pitch
+
+C        ---- 2/1
+B        ----
+A# (Bb)  ----
+A        ----        440 Hz
+G# (Ab)  ----
+G        ---- 3/2
+F# (Gb)  ----
+F        ---- 4/3
+E        ---- 5/4 
+D# (Eb)  ----
+D        ---- 6/5
+C# (Db)  ----
+C        ---- base note -- root, tonic, fundamental
+
+2 / 12 geometrically = r * r ..(12).. * r = (2 ^ 1/12) each
+THIS IS EQUAL TEMPERING
+
+QUIZ EXAMPLES
+
+what ratio defines a half step? 2 ^ 12
+120 up by 1/5? 150
+E and go up by 3 half steps? G
+
+
+MIDI (musical instrument digital interface)
+
+- protocol for encoding performance data
+-  WHEN (ticks)
+   HOW HARD (velocity 0 - 127)
+   WHICH KEY (0 - 127) by half-steps (12 half-steps per octave)
+
