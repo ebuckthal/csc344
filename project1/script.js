@@ -41,8 +41,6 @@ function playSound() {
 
 function scramble() {
 
-   console.log(document.querySelectorAll('input[type="checkbox"]')[0].checked);
-
    var chk_reverseAll = document.querySelectorAll('input[type="checkbox"]')[0].checked;
    var chk_reverseSome = document.querySelectorAll('input[type="checkbox"]')[1].checked;
 
@@ -55,10 +53,12 @@ function scramble() {
    var lAudioScramble = new Array();
    var rAudioScramble = new Array();
 
-   var scramble_size = audioBuffer.sampleRate / 2;
+   var scramble_size = audioBuffer.sampleRate;
    var scramble_segments = Math.floor(audioBuffer.length / scramble_size) - 1;
 
-   for(var i = 0; i < 30; i++) {
+   var scrambles = (20 * audioBuffer.sampleRate) / scramble_size;
+
+   for(var i = 0; i < scrambles; i++) {
       var rand = Math.floor((Math.random() * scramble_segments));
 
       var reverse = false;
