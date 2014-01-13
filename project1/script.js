@@ -41,6 +41,11 @@ function playSound() {
 
 function scramble() {
 
+   console.log(document.querySelectorAll('input[type="checkbox"]')[0].checked);
+
+   var chk_reverseAll = document.querySelectorAll('input[type="checkbox"]')[0].checked;
+   var chk_reverseSome = document.querySelectorAll('input[type="checkbox"]')[1].checked;
+
    var lAudioArray = new Array(); 
    var rAudioArray = new Array();
 
@@ -50,20 +55,29 @@ function scramble() {
    var lAudioScramble = new Array();
    var rAudioScramble = new Array();
 
-   console.log(audioBuffer.sampleRate);
-
-   var seconds = Math.floor(audioBuffer.length / audioBuffer.sampleRate) - 1;
-
-   console.log('seconds: ' + seconds);
+   var scramble_size = audioBuffer.sampleRate / 2;
+   var scramble_segments = Math.floor(audioBuffer.length / scramble_size) - 1;
 
    for(var i = 0; i < 30; i++) {
-      var rand = Math.floor((Math.random() * seconds));
-      console.log(rand);
+      var rand = Math.floor((Math.random() * scramble_segments));
 
-      for(var j = 0; j < audioBuffer.sampleRate; j++) {
+      var reverse = false;
 
-         lAudioScramble[audioBuffer.sampleRate*i + j] = lAudioArray[audioBuffer.sampleRate*rand + j];
-         rAudioScramble[audioBuffer.sampleRate*i + j] = rAudioArray[audioBuffer.sampleRate*rand + j];
+      if(chk_reverseAll || (chk_reverseSome && Math.random() > 0.5)) {
+         reverse = true;
+      }
+
+      for(var j = 0; j < scramble_size; j++) {
+
+         var index = j;
+
+         if(reverse) {
+            index = scramble_size - j;
+         } 
+
+
+         lAudioScramble[scramble_size*i + j] = lAudioArray[scramble_size*rand + index];
+         rAudioScramble[scramble_size*i + j] = rAudioArray[scramble_size*rand + index];
 
       }
    }

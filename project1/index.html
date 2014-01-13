@@ -6,10 +6,16 @@
 </head>
 <body>
    <input type="file" accept="audio/*"/>
+
+   <br/>
+   <input type="checkbox" name="features" value="reverseAll">Reverse All <br/>
+   <input type="checkbox" name="features" value="reverseSome">Reverse Some <br/>
+
+   <button onclick="scramble()" disabled>Scramble!</button> <br/>
+
    <button onclick="playSound()" disabled>Start</button>
-   <button onclick="stopSound()" disabled>Stop</button>
-   <button onclick="scramble()" disabled>Scramble!</button>
-   <button onclick="downloadAudioBlob()" disabled>Download</button>
+   <button onclick="stopSound()" disabled>Stop</button> <br/>
+   <button onclick="downloadAudioBlob()" disabled>Download</button> 
 
    <script src="script.js"></script>
 </body>
