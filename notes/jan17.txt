@@ -1,0 +1,36 @@
+orthogonality - lemons and oranges are orthogonal to eachother, but numbers are not orthogonal to other numbers
+
+a (1, 0) + b (0, 1) = (6, 2)  we can determine a and b
+   these two vectors are linearly independent
+   these two vectors are super orthogonal
+
+a (3, 4) + b (12, 16) = (24, 32) we cannot determine a and b 
+   these two vectors are linearly dependent
+
+ORTHOGONAL -- the dot product is zero
+
+
+(3, 2) and (-2, 3) are our orthogonal vectors
+we want to describe (4, 4) in terms of them
+   4 * -2 = -8
+   4 * 3 = 12
+      -8 + 12 = 4
+
+   4 * 3 = 12 
+   4 * 2 = 8
+      12 + 8 = 20
+
+   (4, 4) is the vector 8(-2, 3) + 20(3, 2)
+
+----
+
+locations of sign waves of frequency sampled at 8 times per second
+
+
+(3) 1        -r2      0        -r2      -1       r2       0        -r2
+(4) 1        1        1        -1       1        -1       1        -1
+(2) 1        0        -1       0        1        0        -1       0
+(1) 1        r2       0        -r2      -1       -r2      0        r2
+(0) 1        1        1        1        1        1        1        1
+
+all are orthogonal (dot product)

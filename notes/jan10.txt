@@ -19,8 +19,8 @@ G        ---- 3/2 fifth
 F# (Gb)  ----
 F        ---- 4/3 fourth
 E        ---- 5/4 major third
-D# (Eb)  ----
-D        ---- 6/5 minor third
+D# (Eb)  ---- 6/5 minor third
+D        ----
 C# (Db)  ----
 C        ---- base note -- root, tonic, fundamental
 
@@ -30,7 +30,7 @@ THIS IS EQUAL TEMPERING
 QUIZ EXAMPLES
 
 what ratio defines a half step? 2 ^ 1/12
-120 up by a fourth? 150
+120 up by a major third? 150
 E and go up by 3 half steps? G
 
 
