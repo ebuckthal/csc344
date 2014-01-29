@@ -8,6 +8,8 @@ var SYNTH = (function() { "use strict";
 
       var audioContext = null;
 
+      var keyboard = new QwertyHancock({ id: 'keyboard', width: 400 });
+
       var volNode = null; 
       var tremoloGain = null; 
       var tremoloLFO = null; 
@@ -19,7 +21,6 @@ var SYNTH = (function() { "use strict";
       var settings = null;
 
       var volController = null;
-      var tremoloWaveformCtrl = null;
       var tremoloFrequencyCtrl = null;
       var tremoloGainCtrl = null;
 
@@ -114,11 +115,8 @@ var SYNTH = (function() { "use strict";
 
             this.lfoWaveform = 'sine';
             this.lfoFrequency = 2;
-            this.lfoGain = 0.3;
-
-            this.timeWarp = 1;
+            this.lfoGain = 0.1;
          };
-
 
          volController = gui.add(settings, 'volume', 0, 1);
 
@@ -127,9 +125,8 @@ var SYNTH = (function() { "use strict";
          menuOsc.add(settings, 'oscGain', 0, 1);
 
          var menuLfo = gui.addFolder('Tremolo');
-         tremoloWaveformCtrl = menuLfo.add(settings, 'lfoWaveform', ['sine', 'square', 'triangle', 'sawtooth']);
          tremoloFrequencyCtrl = menuLfo.add(settings, 'lfoFrequency', 0, 300);
-         tremoloGainCtrl = menuLfo.add(settings, 'lfoGain', 0, 2);
+         tremoloGainCtrl = menuLfo.add(settings, 'lfoGain', 0, 3);
 
          menuOsc.open();
          menuLfo.open();
@@ -138,30 +135,23 @@ var SYNTH = (function() { "use strict";
       function initEffects() {
 
          volNode = audioContext.createGain();
-         tremoloGain = audioContext.createGain();
-         tremoloLFO = audioContext.createOscillator();
+         tremoloGain = audioContext.createScriptProcessor(4096, 1, 1);
 
-         tremoloLFO.frequency.value = settings.lfoFrequency;
-         tremoloLFO.type = settings.lfoWaveform;
-         tremoloLFO.connect(tremoloGain.gain);
-         tremoloLFO.start(0);
-
-         tremoloGain.gain.value = 0;
+         tremoloGain.frequency = settings.lfoFrequency;
+         tremoloGain.gain = settings.lfoGain;
+         tremoloGain.x = 0;
+         tremoloGain.onaudioprocess = tremoloNode;
          tremoloGain.connect(volNode);
 
          volNode.connect(audioContext.destination);
          volNode.gain.value = settings.volume;
 
          tremoloGainCtrl.onChange(function(value) {
-            tremoloGain.gain.value = value;
+            tremoloGain.gain = value;
          });
 
          tremoloFrequencyCtrl.onChange( function(value) {
-            tremoloLFO.frequency.value = value;
-         });
-
-         tremoloWaveformCtrl.onChange( function(value) {
-            tremoloLFO.type = value;
+            tremoloGain.frequency = value;
          });
 
          volController.onChange( function(value) { 
@@ -188,29 +178,30 @@ var SYNTH = (function() { "use strict";
          }
       }
 
-
       function Voice( note, velocity ) {
          this.originalFrequency = frequencyFromNoteNumber( note );
          var now = audioContext.currentTime;
 
          this.envelope = audioContext.createGain();
-         this.o = audioContext.createScriptProcessor(1024, 0, 1);
+         this.o = audioContext.createScriptProcessor(4096, 0, 1);
          this.oGain = audioContext.createGain();
 
          this.o.type = settings.oscWaveform;
          this.o.frequency = this.originalFrequency;
          this.o.x = 0;
          this.o.onaudioprocess = oscillatorNode; 
+         this.o.disconnect(); //makes web audio happy
          this.o.connect(this.oGain);
 
          this.oGain.gain.value = settings.oscGain;
          this.oGain.connect(this.envelope);
+         //this.oGain.connect(tremoloGain);
 
          this.envelope.connect(tremoloGain);
 
          this.envelope.gain.value = 0.0;
          this.envelope.gain.setValueAtTime(0.0, now);
-         this.envelope.gain.linearRampToValueAtTime(1.0, now+0.2);
+         this.envelope.gain.linearRampToValueAtTime(1.0, now+0.1);
 
       }
 
@@ -224,6 +215,24 @@ var SYNTH = (function() { "use strict";
 
       }
 
+      function tremoloNode(audioEvent) {
+         var outputBuffer = audioEvent.outputBuffer;
+         var inputBuffer = audioEvent.inputBuffer;
+
+         for(var channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
+
+            var outData = outputBuffer.getChannelData(channel);
+            var inData = inputBuffer.getChannelData(channel);
+
+            for(var sample = 0; sample < outputBuffer.length; sample++) {
+               this.x += (this.frequency / 44100);
+
+               outData[sample] = inData[sample] * (0.5 + (Math.sin(this.x * Math.PI * 2) * this.gain));
+               
+            }
+         }
+
+      };
 
       function oscillatorNode(audioEvent) {
          var outputBuffer = audioEvent.outputBuffer;
@@ -233,7 +242,7 @@ var SYNTH = (function() { "use strict";
             case "sine":
                for(var channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
 
-                  var outData = outputBuffer.getChannelData(0);
+                  var outData = outputBuffer.getChannelData(channel);
 
                   for(var sample = 0; sample < outputBuffer.length; sample++) {
                      this.x += (this.frequency / 44100);
@@ -247,7 +256,7 @@ var SYNTH = (function() { "use strict";
             case "square":
                   for(var channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
 
-                     var outData = outputBuffer.getChannelData(0);
+                     var outData = outputBuffer.getChannelData(channel);
 
                      for(var sample = 0; sample < outputBuffer.length; sample++) {
 
