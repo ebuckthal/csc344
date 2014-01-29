@@ -13,6 +13,35 @@
    <script src="js/replayer.js"></script>
    <script src="js/Player.js"></script>
    <script src="js/synth.js"></script>
+
+
+   <script>
+
+      var synth;
+
+      window.onload = function() {
+         synth = SYNTH.createSynth();
+         synth.initAudio();
+
+         window.addEventListener('keyup', synth.keyUp, false);
+         window.addEventListener('keydown', synth.keyDown, false);
+         document.querySelector('input[type="file"]').addEventListener('change', function() {
+
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+
+               synth.playMIDIFile(this.result);
+            }
+
+            reader.readAsBinaryString(this.files[0]);
+            
+         }, false); 
+
+      };
+
+   </script>
+
 </body>
 
 </html>

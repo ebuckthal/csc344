@@ -78,7 +78,7 @@ function Replayer(midiFile) {
 				var beatsToGenerate = midiEvent.ticksToEvent / ticksPerBeat;
 				var secondsToGenerate = beatsToGenerate / (beatsPerMinute / 60);
 			}
-			var time = (secondsToGenerate * 1000 * settings.timeWarp) || 0;
+			var time = (secondsToGenerate * 1000 * 1) || 0;
 			temporal.push([ midiEvent, time]);
 			midiEvent = getNextEvent();
 		};
