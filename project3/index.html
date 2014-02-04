@@ -7,9 +7,17 @@
 
       <div id="keyboard" style="width: 500px;"></div>
 
+      <input type=file accept="audio/*"/>
+
       <script src="dat.gui.min.js"></script>
       <script src="qwerty-hancock.js"></script>
       <script src="synth.js"></script>
+
+      <script>
+         document.querySelector('input[type="file"]').addEventListener('change', function() {
+            SYNTH.initFile(this.files[0]);
+         });
+      </script>
    </body>
 
 </html>
