@@ -6,7 +6,6 @@ var SYNTH = (function() { "use strict";
    //GUI stuff
    var settings = null;
    var gui = null;
-   var volController = null;
 
    var keyboard = null;
 
@@ -23,7 +22,7 @@ var SYNTH = (function() { "use strict";
       settings = new function() { //for GUI
          this.masterGain = 0.3;
 
-         this.oscillatorWaveform = 'sine';
+         this.oscillatorWaveform = 'sawtooth';
          this.oscillatorGain = 0.5;
 
          this.lfoWaveform = 'sine';
@@ -36,7 +35,6 @@ var SYNTH = (function() { "use strict";
          this.releaseTime = 0.1;
       };
 
-      volController = gui.add(settings, 'masterGain', 0, 1); 
 
       var menuOscillator = gui.addFolder('Oscillator');
       menuOscillator.add(settings, 'oscillatorWaveform', ['sine', 'square', 'triangle', 'sawtooth']);
@@ -52,6 +50,13 @@ var SYNTH = (function() { "use strict";
 
       menuOscillator.open();
       menuLFO.open();
+
+      var volController = gui.add(settings, 'masterGain', 0, 1); 
+
+      volController.onChange(function(value) {
+         masterGain.gain.value = value;
+      });
+
    };
 
    function initKeyboard() {
@@ -91,8 +96,9 @@ var SYNTH = (function() { "use strict";
 
       masterGain = audioContext.createGain();
 
-      masterGain.gain.value = 0.3;
+      masterGain.gain.value = settings.masterGain;
       masterGain.connect(audioContext.destination);
+
 
    };
 
@@ -104,15 +110,26 @@ var SYNTH = (function() { "use strict";
       this.oscillator = audioContext.createOscillator();
       this.envelope = audioContext.createGain();
 
-      this.oscillator.frequency.value = frequency;
+      this.lfo = audioContext.createOscillator();
+      this.lfoGain = audioContext.createGain();
+
+      this.lfo.type = 'sine';
+      this.lfo.frequency.value = settings.lfoFrequency;
+      this.lfo.connect(this.lfoGain);
+
+      this.lfoGain.gain.value = this.originalFrequency;
+      this.lfoGain.connect(this.oscillator.frequency);
+
+      //this.oscillator.frequency.value = t;
       this.oscillator.type = settings.oscillatorWaveform;
       this.oscillator.connect(this.envelope);
 
       this.envelope.gain.setValueAtTime(0, now);
       this.envelope.gain.linearRampToValueAtTime(settings.attackGain, now + settings.attackTime);
       this.envelope.gain.linearRampToValueAtTime(settings.oscillatorGain, now + settings.attackTime + settings.decayTime);
-      this.envelope.connect(audioContext.destination);
+      this.envelope.connect(masterGain);
 
+      this.lfo.start(0);
       this.oscillator.start(0);
    };
 
@@ -120,12 +137,12 @@ var SYNTH = (function() { "use strict";
       var now = audioContext.currentTime;
 
       //console.log(now + settings.attackTime);
-
       this.envelope.gain.setValueAtTime(this.envelope.gain.value, now);
       this.envelope.gain.linearRampToValueAtTime(0, now + settings.releaseTime);
       //this.envelope.gain.setTargetAtTime(0.0, now, 0.1);
 
       this.oscillator.stop(now + settings.releaseTime);
+      this.lfo.stop(now + settings.releaseTime);
    };
 
    return {
