@@ -1,3 +1,4 @@
+once = false;
 var SYNTH = (function() { "use strict";
 
    var audioContext = new webkitAudioContext();
@@ -13,6 +14,9 @@ var SYNTH = (function() { "use strict";
    var masterGain;
    var effectsChain;
    var filter;
+   var myfilter;
+   var mydistortion;
+   var waveshaper;
    var bufferSource = audioContext.createBufferSource();
 
    initFile();
@@ -55,9 +59,13 @@ var SYNTH = (function() { "use strict";
          this.decayTime = 0.1;
          this.releaseTime = 0.1;
 
+         this.filterEnabled = true;
          this.filterType = 'lowpass';
-         this.filterFreq = 100;
-         this.filterQ = 10;
+         this.filterFreq = 10000;
+         this.filterQ = 31;
+
+         this.distortionEnabled = false;
+         this.distortionAmount = 256;
       };
 
 
@@ -70,32 +78,66 @@ var SYNTH = (function() { "use strict";
       menuOscillator.add(settings, 'releaseTime', 0.01, 1);
 
       var menuLFO = gui.addFolder('Frequency Modulator');
+      var lfoWaveformCtrl = menuLFO.add(settings, 'lfoWaveform', ['sine', 'square', 'triangle', 'sawtooth']);
       var lfoFreqCtrl = menuLFO.add(settings, 'lfoFrequency', 0, 20);
       var lfoGainCtrl = menuLFO.add(settings, 'lfoGain', 0, 1);
 
+      var menuFilter = gui.addFolder('Lowpass Filter');
+      var filterEnableCtrl = menuFilter.add(settings, 'filterEnabled');
+      var filterFreqCtrl = menuFilter.add(settings, 'filterFreq', 100, 10000);
+      var filterQCtrl = menuFilter.add(settings, 'filterQ').min(11).max(51).step(2);
+      //var filterTypeCtrl = menuFilter.add(settings, 'filterType', ['lowpass', 'highpass', 'bandpass']);
+      
+      var menuDestortion = gui.addFolder('coolDistortion');
+      var distortionEnableCtrl = menuDestortion.add(settings, 'distortionEnabled');
+      var distortionSliderCtrl = menuDestortion.add(settings, 'distortionAmount', 0, 256);
+
       menuOscillator.open();
       menuLFO.open();
+      menuFilter.open();
+      menuDestortion.open();
 
       var volController = gui.add(settings, 'masterGain', 0, 1); 
-      var filterFreqCtrl = gui.add(settings, 'filterFreq', 100, 22050);
-      var filterQCtrl = gui.add(settings, 'filterQ', 0, 30);
-      var filterTypeCtrl = gui.add(settings, 'filterType', ['lowpass', 'highpass', 'bandpass']);
 
       volController.onChange(function(value) {
          masterGain.gain.value = value;
       });
 
       filterFreqCtrl.onChange(function(value) {
-         filter.frequency.value = value;
+
+         myfilter.freq = value;
+         myfilter.a = calcFilter(44100, 0, myfilter.freq, myfilter.q, 100);
       });
       
       filterQCtrl.onChange(function(value) {
-         filter.Q.value = value;
+         
+         myfilter.q = value+1;
+         myfilter.a = calcFilter(44100, 0, myfilter.freq, myfilter.q, 100);
       });
 
-      filterTypeCtrl.onChange(function(value) {
-         filter.type = value;
+      filterEnableCtrl.onChange(function(value) {
+
+         myfilter.onaudioprocess = value ? lowpassFilter : wire;
+
       });
+
+      distortionEnableCtrl.onChange(function(value) {
+
+         console.log(value);
+         mydistortion.onaudioprocess = value ? coolDistortion : wire;
+      });
+
+      distortionSliderCtrl.onChange(function(value) {
+
+         mydistortion.amount = value;
+      });
+
+      lfoWaveformCtrl.onChange(function(value) {
+         for(var voice in voices) {
+            voices[voice].updateLFOWaveform(value);
+         }
+      });
+
 
       lfoFreqCtrl.onChange(function(value) {
          for(var voice in voices) {
@@ -149,22 +191,73 @@ var SYNTH = (function() { "use strict";
       masterGain = audioContext.createGain();
       effectsChain = audioContext.createGain();
       filter = audioContext.createBiquadFilter();
+      
+      myfilter = audioContext.createScriptProcessor(256, 1, 1);
+      mydistortion = audioContext.createScriptProcessor(256, 1, 1);
 
       effectsChain.gain.value = 1;
-      effectsChain.connect(filter);
+      effectsChain.connect(myfilter);
 
-      filter.type = settings.filterType;
-      filter.frequency.value = settings.filterFreq;
-      filter.Q.value = settings.filterQ;
-      filter.connect(masterGain);
+      myfilter.prev = new Array(256).join('0').split('').map(parseFloat);
+      myfilter.q = settings.filterQ
+      myfilter.freq = settings.filterFreq
+      myfilter.a = calcFilter(44100, 0, myfilter.freq, myfilter.q, 100);
+      myfilter.connect(mydistortion);
 
+      myfilter.onaudioprocess = settings.filterEnabled ? lowpassFilter : wire;
+
+      mydistortion.amount = 100;
+      mydistortion.onaudioprocess = settings.distortionEnabled ? coolDistortion : wire;
+
+      mydistortion.connect(masterGain);
 
       masterGain.gain.value = settings.masterGain;
       masterGain.connect(audioContext.destination);
 
-
    };
 
+   function wire(audioEvent) {
+      var outputBuffer = audioEvent.outputBuffer.getChannelData(0);
+      var inputBuffer = audioEvent.inputBuffer.getChannelData(0);
+
+      for(var sample = 0; sample < 256; sample++) {
+         outputBuffer[sample] = inputBuffer[sample];
+      }
+   }
+
+   function coolDistortion(audioEvent) {
+      var outputBuffer = audioEvent.outputBuffer.getChannelData(0);
+      var inputBuffer = audioEvent.inputBuffer.getChannelData(0);
+
+      var threshold = this.amount / (256);
+
+      for(var sample = 0; sample < 256; sample++) {
+         outputBuffer[sample] = (threshold) * Math.pow(inputBuffer[sample], threshold);
+      }
+   }
+
+   function lowpassFilter(audioEvent) { 
+      var outputBuffer = audioEvent.outputBuffer.getChannelData(0);
+      var inputBuffer = audioEvent.inputBuffer.getChannelData(0);
+
+      var filterLength = this.a.length;
+     
+      for(var sample = 0; sample < 256; sample++) {
+
+         outputBuffer[sample] = this.a[0]*inputBuffer[sample];
+
+         for(var i = 1; i < this.q; i++) {
+
+            if(sample - i < 0) {
+               outputBuffer[sample] -= this.a[i]*this.prev[255+(sample-i)];
+            } else {
+               outputBuffer[sample] -= this.a[i]*inputBuffer[sample-i];
+            }
+         }
+      }
+
+      this.prev = inputBuffer;
+   }
 
    function Voice(frequency, velocity) {
       var now = audioContext.currentTime;
@@ -177,7 +270,7 @@ var SYNTH = (function() { "use strict";
       this.lfo = audioContext.createOscillator();
       this.lfoGain = audioContext.createGain();
 
-      this.lfo.type = 'sine';
+      this.lfo.type = settings.lfoWaveform;
       this.lfo.frequency.value = settings.lfoFrequency;
       this.lfo.connect(this.lfoGain);
 
@@ -202,6 +295,9 @@ var SYNTH = (function() { "use strict";
    }
    Voice.prototype.updateLFOGain = function(value) {
       this.lfoGain.gain.value = value*this.originalFrequency / 2;
+   }
+   Voice.prototype.updateLFOWaveform = function(value) {
+      this.lfo.type = value;
    }
 
 
