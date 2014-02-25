@@ -1,0 +1,79 @@
+need to normalize gain on our lowpass filter. The gain at 0 is 
+
+Y = X [ 1 / ( 1 + Bz^-1 + Cz^-2 + Dz^-3 + Ez^-4 ) ] AT z = 1 IS [ 1 / ( 1 + B + C + D + E ) ] = Gain_p
+
+Y = [ 1 + Bz + Czz + Dzzz + Ezzzz ] = X => Y = X - BzY - CzzY - DzzzY - EzzzzY
+
+
+ ___    ___
+|   \  /   |
+|    \/    |
+|          |
+|___|\/|___| I D T E R M
+
+- sound architecture
+   - online vs. offline
+
+- DAW vs. distributed (modular) vs. language-based 
+
+- Physics of sound
+   - signals (function of time to amplitude)
+   - Hertz
+   - properties of audio (+, *K, * is weird)
+
+- Euler's Equation (the complex phasor e^iwt)
+
+- sampling (theorem: transition from continuous to discreet realm)
+   - Nyquist
+   - why sine waves? the basis of hearing and vibration
+
+- rhythm
+   - beats, measures, common time signatures
+   - common conventions of dance music
+
+- pitch
+   - intervals, geometric perception, octave = 2, fifth, fourth, major third, minor third
+   - euphonious intervals (octave, fifth, fourth, major third, minor third)
+   - equal tempering and just intonation
+   - MIDI note numbers, MIDI in general
+   - note names, 12 steps per octave
+
+- fourier analysis
+   - orthagonality
+   - multiply by phasors
+
+- simple waveforms, PWM, etc.
+
+- simple synthesizers 
+   - oscillators
+   - linked together
+
+- envelopes
+
+- AM, RM (multiplying sinewaves)
+
+- FM (a signal controls frequency of another)
+
+- Filters (LTI)
+   - linearity
+   - time-invariance
+   - characterized by impulse response
+
+- Convolution (using an impulse response)
+
+- Z transform for FIR (finite impulse response, feed forward) filters
+
+- Z transform for IIR (infinite impuse response, feed backward) filters
+
+
+D I S T O R T I O N
+
+- clipping
+   - hard: chopped at specific line
+   - soft (overdrive?): a more gentle slope from min to max output amplitude
+   - flange
+   - chorus
+   - time dilation (frequency and time are related so you hae to cheat)
+      - take sound, divide into overlapping pieces, then play end to end so it is slightly longer
+      - perhaps envelope them so it's not so choppy
+   - fourier-based techniques 

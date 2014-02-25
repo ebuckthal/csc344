@@ -1,0 +1,19 @@
+The Z-transform for feed-formed filters
+
+Y(t) = (sigma)x [ kx X(t-x) ]
+
+examples --
+   Y(t) = X(t)                identity filter
+   Y(t) = X(t) + X(t-1)
+   Y(t) = X(t) + X(t-10000)   delay   
+   Y(t) = 3X(t) + 14X(t-1)
+
+
+You'll see that these linear filters affect different frequencies differently
+
+Ae^(i * (2PI / SR) * omega * t) ------ SR == number of samples, omega = number of rotations of our samples (only real portion), A = phase shift and amplitude
+
+Z = e^(i 2PI/SR omega)
+
+multiplying a phasor by a vector -- phase offset by theta, amplitude multiplied by amplitude of vector
+

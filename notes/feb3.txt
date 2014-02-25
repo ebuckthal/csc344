@@ -1,0 +1,20 @@
+CONVOLUTION
+
+f(x) = impulse response
+s(x) = signal
+
+convolution - h(x)
+
+h(t) = sum [ f(x) * s(t-x) ] over all integers x OR sum [ f(t-y) * s(y) ] over all integers y
+   THUS it is symmetric (if we substitute y for x)
+
+complexity = O(m*n) 
+   m = length of sample (~ 4 second = 176K samples)
+   n = length of signal (~ 10 seconds = 441K samples)
+   m * n = 7.7 Billion multiplications
+
+The perfect way of simulating any linear filter, but it is not feasible in terms of computation
+
+Time to simulate!
+
+^~~~~ feed forward filter implementation
