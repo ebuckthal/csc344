@@ -1,7 +1,13 @@
 var context = new webkitAudioContext(); 
 
-var events = [];
+//keeps track of the current patterns for each istrument and the seed
+var sequence = {
+   instruments: {},
+   playing: false,
+   seed: null
+}
 
+//predetermined possible samples for each instrument and potential patterns
 var instruments = {
    kick: { 
             urls: [
@@ -77,44 +83,84 @@ var instruments = {
       }
 };
 
+//my own random so I can play with custom seeds 
 function random() {
    var x = Math.sin(sequence.seed++) * 10000;
    return x - Math.floor(x);
 }
 
+//plays a list of seeds (re: a song), in order
 function playSong(seeds) {
 
    var seedIndex = 0;
    while(seedIndex < seeds.length) {
 
       if(!isSequencePlaying()) {
-         g(seeds[seedIndex++]);
+         seedSequence(seeds[seedIndex++]);
       }
    }
 
 }
 
-function g(seed) {
+//generates a new sequence with the seed, then plays the sequence
+function seedSequence(seed) {
    console.log(seed);
+
    sequence.seed = seed;
+   
    generateSequence();
    playSequence();
 }
 
+//a sequence is a collection of patterns and instruments
+//an instrument is a sample
+//a pattern is a pretermined pattern of how those samples will be played
+function playSequence() {
+
+   var now = context.currentTime;
+   
+   //WARNING: magic number
+   var timePerTick = 0.13;
+
+   //16 ticks per sequence
+   sequence.playing = now + (timePerTick * 16);
+
+   _.each(sequence.instruments, function(data, instrument) {
+
+         console.log(data.pattern);
+
+         _.each(_.flatten(data.pattern), function(beat, index) {
+
+               var buffer = sequence.instruments[instrument];
+
+               //can't tell if this does anything
+               var tastefuloffset = random() * 0.05;
+
+               if(beat) {
+                  playSound(buffer, now + index*timePerTick + tastefuloffset);
+               }
+
+      });
+   });
+}
+
+//creates a random pattern and isntrument for each instrument
 function generateSequence(seed) {
 
    _.each(instruments, function(data, instrument) {
 
-      var index = Math.floor(random() * data.buffers.length);
-
       sequence.instruments[instrument] = {};
 
+      //gets a random possible sample
+      var index = Math.floor(random() * data.buffers.length);
       sequence.instruments[instrument].buffer = data.buffers[index];
 
       sequence.instruments[instrument].pattern = generatePattern(data);
    });
 }
 
+//gets a pattern by chosing a random one from the list. if its made of subpatterns,
+//repeat them
 function generatePattern(instrument) {
 
    var pattern = [];
@@ -128,19 +174,24 @@ function generatePattern(instrument) {
    return pattern;
 }
 
-var sequence = {
-   instruments: {},
-   playing: false,
-   seed: null
+//makes a new audio node and plays the buffer of the sample
+function playSound(sound, time) {
+   var source = context.createBufferSource();
+   source.buffer = sound.buffer;
+   source.connect(context.destination);
+   source.start(time);
 }
 
+function isSequencePlaying() {
+   return context.currentTime < sequence.playing;
+}
+
+//initializes all of the samples from the original list of instruments
 function loadSounds() {
 
    _.each(instruments, function(value, key) {
 
       _.each(value.urls, function(url, index) {
-
-         console.log(url);
 
          var request = new XMLHttpRequest();
          request.open('GET', url, true);
@@ -164,39 +215,4 @@ function loadSounds() {
 
 }
 
-function playSound(sound, time) {
-   var source = context.createBufferSource();
-   source.buffer = sound.buffer;
-   source.connect(context.destination);
-   source.start(time);
-}
-
-function isSequencePlaying() {
-   return context.currentTime < sequence.playing;
-}
-
-function playSequence(bpm) {
-
-   var now = context.currentTime;
-   var timePerTick = 0.13;
-
-   sequence.playing = now + (timePerTick * 16);
-
-
-   _.each(sequence.instruments, function(data, instrument) {
-
-         console.log(data.pattern);
-
-         _.each(_.flatten(data.pattern), function(beat, index) {
-
-               var buffer = sequence.instruments[instrument];
-
-               var tastefuloffset = random() * 0.05;
-
-               if(beat) {
-                  playSound(buffer, now + index*timePerTick + tastefuloffset);
-               }
-
-      });
-   });
-}
+window.ondload = loadSounds();
